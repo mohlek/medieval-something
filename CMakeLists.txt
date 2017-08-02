@@ -15,6 +15,7 @@ set(SOURCE
 
 set(SHADERS
     src/shader/main.frag
+    src/shader/main.vert
 )
 
 #########################################################

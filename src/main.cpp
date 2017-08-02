@@ -15,9 +15,15 @@ int main(int argc, char** argv) {
     win->create();
    
     ShaderProgram p1;
-    ShaderLoader sl(GL_FRAGMENT_SHADER, "shader/main.frag");
-    Shader s(sl);
-    p1.shaders.push_back(std::make_shared<Shader>(s));
+    
+    ShaderLoader loadMainVertex(GL_VERTEX_SHADER, "shader/main.vert");
+    Shader mainVertex(loadMainVertex);
+    p1.shaders.push_back(std::make_shared<Shader>(mainVertex));
+    
+    ShaderLoader loadMainFrag(GL_FRAGMENT_SHADER, "shader/main.frag");
+    Shader mainFrag(loadMainFrag);
+    p1.shaders.push_back(std::make_shared<Shader>(mainFrag));
+
     p1.link();
     
     while (win->loop()) {

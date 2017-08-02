@@ -33,6 +33,7 @@ void ShaderProgram::link() {
     this->programId = glCreateProgram();
 
     for (auto& s : this->shaders) {
+        s->compile();
         glAttachShader(this->programId, s->getShaderId());
     }
 
