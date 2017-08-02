@@ -4,8 +4,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "config.h"
-
 namespace Engine {
 
     class Window {
@@ -13,8 +11,6 @@ namespace Engine {
             GLFWwindow* window;
             GLFWmonitor* monitor;
             const GLFWvidmode* mode;
-
-            CONFIG::WINDOW_STATE windowState;
 
             static void errorCallback(int error, const char* desc);
             static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
