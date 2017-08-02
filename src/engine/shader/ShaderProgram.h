@@ -10,9 +10,10 @@ namespace Engine {
     class ShaderProgram {
         private:
             GLuint programId = 0;
-            
-            std::vector<std::shared_ptr<Shader>> shaders;
+        
         public:
+            std::vector<std::shared_ptr<Shader>> shaders;
+            
             ShaderProgram();
             virtual ~ShaderProgram();
 

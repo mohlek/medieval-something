@@ -13,6 +13,10 @@ set(SOURCE
     src/main.cpp
 )
 
+set(SHADERS
+    src/shader/main.frag
+)
+
 #########################################################
 # FIND OpenGL
 #########################################################
@@ -47,6 +51,15 @@ add_definitions(${GLDFW_DEFINITIONS})
 if(NOT GLFW_FOUND)
     message(ERROR " GLFW not found!")
 endif(NOT GLFW_FOUND)
+
+########################################################
+# COPY SHADER
+########################################################
+
+foreach(SHADER ${SHADERS})
+    message(STATUS "copy shader " ${SHADER})
+    file(COPY ${SHADER} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/shader/)
+endforeach(SHADER)
 
 add_executable(medievalSomething ${SOURCE})
 

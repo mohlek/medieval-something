@@ -5,7 +5,7 @@
 
 using namespace Engine;
 
-ShaderLoader::ShaderLoader(GLenum shaderType, std::string& path) : shaderType(shaderType) {
+ShaderLoader::ShaderLoader(GLenum shaderType, std::string&& path) : shaderType(shaderType) {
 
     std::ifstream fileStream(path.c_str(), std::ios::in);
     

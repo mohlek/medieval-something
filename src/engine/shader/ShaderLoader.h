@@ -1,5 +1,9 @@
+#ifndef SHADERLOADER_H
+#define SHADERLOADER_H
+
 #include <GL/glew.h>
 #include <string>
+#include <memory>
 
 namespace Engine {
     
@@ -9,7 +13,8 @@ namespace Engine {
             const GLenum shaderType;
             std::string source;
 
-            ShaderLoader(GLenum shaderType, std::string& path);
-            ~ShaderLoader();
+            ShaderLoader(GLenum shaderType, std::string&& path);
     };
 }
+
+#endif

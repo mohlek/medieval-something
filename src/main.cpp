@@ -3,21 +3,30 @@
 
 #include "engine/Window.h"
 #include "engine/Object.h"
+#include "engine/shader/ShaderProgram.h"
+#include "engine/shader/ShaderLoader.h"
 
-void render() {
-    static const GLfloat color[] = {.0f, .0f, .5f, 1.0f};
-    glClearBufferfv(GL_COLOR, 0, color);
-}
+using namespace Engine;
 
 int main(int argc, char** argv) {
 
-    Engine::Window* win = new Engine::Window();
+    Window* win = new Window();
 
     win->create();
+   
+    ShaderProgram p1;
+    ShaderLoader sl(GL_FRAGMENT_SHADER, "shader/main.frag");
+    Shader s(sl);
+    p1.shaders.push_back(std::make_shared<Shader>(s));
+    p1.link();
     
-    Engine::Object* o = new Engine::Object();
-    
-    while(win->loop());
+    while (win->loop()) {
+        glClear(GL_COLOR_BUFFER_BIT || GL_DEPTH_BUFFER_BIT);
+
+        p1.use();
+
+        p1.end();
+    }
     win->close();
 
     return 0;
