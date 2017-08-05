@@ -9,14 +9,18 @@ namespace Engine {
             const GLenum bufferType;
            
             GLint size;
-            GLenum dataType;
+            GLenum dataType = GL_FLOAT;
             GLsizei stride;
 
             Buffer(GLenum bufferType);
             Buffer() : Buffer(GL_ARRAY_BUFFER) {};
             virtual ~Buffer();
 
-            void* map();
+            void bind();
+            
+            void pushData(void* data, int size);
+
+            void* map(GLenum access);
             bool  unmap();
     };
 }

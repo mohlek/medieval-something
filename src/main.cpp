@@ -2,9 +2,10 @@
 #include <stdlib.h>
 
 #include "engine/Window.h"
-#include "engine/Object.h"
 #include "engine/shader/ShaderProgram.h"
 #include "engine/shader/ShaderLoader.h"
+
+#include "engine/model/3ds/Model3DS.h"
 
 using namespace Engine;
 
@@ -25,6 +26,8 @@ int main(int argc, char** argv) {
     p1.shaders.push_back(std::make_shared<Shader>(mainFrag));
 
     p1.link();
+
+    Model3DS dragon("resource/dragon.3ds");
     
     while (win->loop()) {
         glClear(GL_COLOR_BUFFER_BIT || GL_DEPTH_BUFFER_BIT);

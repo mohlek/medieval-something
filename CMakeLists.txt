@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 PROJECT(MEDIEVAL_SOMETHING)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
+
 set(SOURCE
     src/engine/Window.cpp
     src/engine/Buffer.cpp
@@ -10,12 +12,17 @@ set(SOURCE
     src/engine/shader/ShaderLoader.cpp
     src/engine/shader/Shader.cpp
     src/engine/shader/ShaderProgram.cpp
+    src/engine/model/3ds/Model3DS.cpp
     src/main.cpp
 )
 
 set(SHADERS
     src/shader/main.frag
     src/shader/main.vert
+)
+
+set(RESOURCES
+    resource/dragon.3ds
 )
 
 #########################################################
@@ -54,6 +61,17 @@ if(NOT GLFW_FOUND)
 endif(NOT GLFW_FOUND)
 
 ########################################################
+# FIND LIB3DS
+########################################################
+find_package(Lib3ds)
+include_directories(${LIB3DS_INCLUDE_DIRS})
+link_directories(${LIB3DS_LIBRARY_DIRS})
+if(NOT LIB3DS_FOUND)
+    message(ERROR " LIB3DS not found!")
+endif(NOT LIB3DS_FOUND)
+
+
+########################################################
 # COPY SHADER
 ########################################################
 
@@ -62,6 +80,9 @@ foreach(SHADER ${SHADERS})
     file(COPY ${SHADER} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/shader/)
 endforeach(SHADER)
 
+message(STATUS "copy resources")
+file(COPY ${RESOURCES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/resource/)
+
 add_executable(medievalSomething ${SOURCE})
 
-target_link_libraries(medievalSomething ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES})
+target_link_libraries(medievalSomething ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${LIB3DS_LIBRARY})
