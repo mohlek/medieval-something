@@ -9,10 +9,12 @@ set(SOURCE
     src/engine/Buffer.cpp
     src/engine/VertexArrayObject.cpp
     src/engine/Object.cpp
+    src/engine/Camera.cpp
     src/engine/shader/ShaderLoader.cpp
     src/engine/shader/Shader.cpp
     src/engine/shader/ShaderProgram.cpp
     src/engine/model/3ds/Model3DS.cpp
+    src/shader/MainShader.cpp
     src/main.cpp
 )
 

@@ -2,10 +2,12 @@
 
 #include <cstring>
 
+#define MEMCPY
+
 using namespace Engine;
 
 Buffer::Buffer(GLenum bufferType) : bufferType(bufferType) {
-    glGenBuffers(1, &this->bufferId);
+    glCreateBuffers(1, &this->bufferId);
 }
 
 Buffer::~Buffer() {
@@ -33,9 +35,20 @@ void* Buffer::map(GLenum access = GL_READ_WRITE) {
 
 void Buffer::pushData(void* data, int size) {
     this->size = size;
+    
+    #ifdef MEMCPY
     void* addr = map(GL_WRITE_ONLY);
-
     std::memcpy(addr, data, this->size);
+    unmap();
+    #else
+    if (glNamedBufferSubData) {
+        glNamedBufferSubData(this->bufferId, 0, size, data);
+    }
+
+    bind();
+    glBufferSubData(this->bufferType, 0, size, data);
+    #endif
+
 }
 
 bool Buffer::unmap() {

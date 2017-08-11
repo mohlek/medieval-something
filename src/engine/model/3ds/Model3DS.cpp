@@ -9,6 +9,8 @@
 using namespace Engine;
 
 Model3DS::Model3DS(std::string&& filename) {
+    this->vertexVBO = std::make_shared<Buffer>();
+    this->normalsVBO = std::make_shared<Buffer>();
     this->model = lib3ds_file_load(filename.c_str());
 
     if (!model) {
@@ -56,11 +58,11 @@ void Model3DS::createVBO() {
 
     unsigned int size = sizeof(Lib3dsVector) * 3 * totalFaces;
 
-    this->vertexVBO.stride = sizeof(Lib3dsVector) * 3;
-    this->vertexVBO.pushData(vertices, size);
+    this->vertexVBO->stride = sizeof(Lib3dsVector) * 3;
+    this->vertexVBO->pushData(vertices, size);
 
-    this->normalsVBO.stride = sizeof(Lib3dsVector) * 3;
-    this->normalsVBO.pushData(normals, size);
+    this->normalsVBO->stride = sizeof(Lib3dsVector) * 3;
+    this->normalsVBO->pushData(normals, size);
 
     delete vertices;
     delete normals;

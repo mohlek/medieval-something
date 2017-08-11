@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <glm/glm.hpp>
+#include <memory>
+
 #include "engine/Window.h"
-#include "engine/shader/ShaderProgram.h"
-#include "engine/shader/ShaderLoader.h"
+#include "engine/Camera.h"
 
 #include "engine/model/3ds/Model3DS.h"
+#include "engine/VertexArrayObject.h"
+
+#include "shader/MainShader.h"
 
 using namespace Engine;
 
@@ -14,27 +19,31 @@ int main(int argc, char** argv) {
     Window* win = new Window();
 
     win->create();
-   
-    ShaderProgram p1;
-    
-    ShaderLoader loadMainVertex(GL_VERTEX_SHADER, "shader/main.vert");
-    Shader mainVertex(loadMainVertex);
-    p1.shaders.push_back(std::make_shared<Shader>(mainVertex));
-    
-    ShaderLoader loadMainFrag(GL_FRAGMENT_SHADER, "shader/main.frag");
-    Shader mainFrag(loadMainFrag);
-    p1.shaders.push_back(std::make_shared<Shader>(mainFrag));
 
-    p1.link();
+    Game::Shader::MainShader mainShader;
+    
+    mainShader.link();
 
     Model3DS dragon("resource/dragon.3ds");
-    
+   
+    float points[] = {
+         0.5f,  0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f
+    };
+
+    VertexArrayObject vao;
+    std::shared_ptr<Buffer> vbo = std::make_shared<Buffer>();
+    vbo->pushData(points, 9 * sizeof(float));
+    vbo->stride = 3 * sizeof(float);
+
+    vao.addBuffer(vbo);
+
     while (win->loop()) {
-        glClear(GL_COLOR_BUFFER_BIT || GL_DEPTH_BUFFER_BIT);
+        mainShader.use();
 
-        p1.use();
-
-        p1.end();
+        vao.bind();
+        glDrawArrays(GL_TRIANGLES, 0, 3);
     }
     win->close();
 

@@ -28,6 +28,9 @@ void printProgramInfoLog(GLuint obj) {
 	}
 }
 
+GLint ShaderProgram::getUniformLocation(std::string&& name) {
+    return glGetUniformLocation(this->programId, name.c_str());
+}
 
 void ShaderProgram::link() {
     this->programId = glCreateProgram();

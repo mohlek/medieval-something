@@ -16,5 +16,7 @@ namespace Engine {
             virtual ~VertexArrayObject();
 
             void addBuffer(std::shared_ptr<Buffer>& buffer);
+            
+            void bind();
     };
 }

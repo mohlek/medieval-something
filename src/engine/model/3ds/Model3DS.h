@@ -1,9 +1,13 @@
+#ifndef MODEL3DS_H
+#define MODEL3DS_H
+
 #include <lib3ds/file.h>
 #include <GL/glew.h>
 
-#include "../../Buffer.h"
-
 #include <string>
+#include <memory>
+
+#include "../../Buffer.h"
 
 namespace Engine {
     class Model3DS {
@@ -12,8 +16,8 @@ namespace Engine {
 
             unsigned int getTotalFaces();
         public:
-            Engine::Buffer vertexVBO;
-            Engine::Buffer normalsVBO;
+            std::shared_ptr<Buffer> vertexVBO;
+            std::shared_ptr<Buffer> normalsVBO;
 
             Model3DS(std::string&& filename);
             ~Model3DS();
@@ -21,3 +25,5 @@ namespace Engine {
             void createVBO();
     };
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef BUFFER_H
+#define BUFFER_H
+
 #include <GL/glew.h>
 
 namespace Engine {
@@ -24,3 +27,5 @@ namespace Engine {
             bool  unmap();
     };
 }
+
+#endif
