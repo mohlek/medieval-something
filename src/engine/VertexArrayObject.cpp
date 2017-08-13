@@ -20,13 +20,15 @@ void VertexArrayObject::addBuffer(std::shared_ptr<Buffer>& buffer) {
 
     if (glEnableVertexArrayAttrib) {
         glEnableVertexArrayAttrib(this->vaoId, index);
+        glVertexArrayVertexBuffer(this->vaoId, index, buffer->getId(), 0, buffer->stride);
+        glVertexArrayAttribFormat(this->vaoId, index, buffer->valuesPerIndex, GL_FLOAT, GL_FALSE, 0);
     } else {
         glEnableVertexAttribArray(index);
+        buffer->bind();
+        bind();
+        glVertexAttribPointer(index, buffer->valuesPerIndex, buffer->dataType, GL_FALSE, buffer->stride, 0);
     }
 
-    buffer->bind();
-    bind();
-    glVertexAttribPointer(index, 3, buffer->dataType, GL_FALSE, buffer->stride, 0);
     this->buffers.push_back(buffer);
 }
 

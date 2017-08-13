@@ -14,17 +14,22 @@ namespace Engine {
             GLint size;
             GLenum dataType = GL_FLOAT;
             GLsizei stride;
+            GLenum valuesPerIndex = 3;
 
             Buffer(GLenum bufferType);
             Buffer() : Buffer(GL_ARRAY_BUFFER) {};
             virtual ~Buffer();
 
             void bind();
+            void unbind();
             
             void pushData(void* data, int size);
 
             void* map(GLenum access);
             bool  unmap();
+        
+            GLuint getId() { return bufferId; }
+    
     };
 }
 

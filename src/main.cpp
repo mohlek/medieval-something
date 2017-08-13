@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
     vbo->pushData(points, 9 * sizeof(float));
     vbo->stride = 3 * sizeof(float);
 
+    //vao.addBuffer(dragon.vertexVBO);
     vao.addBuffer(vbo);
 
     while (win->loop()) {

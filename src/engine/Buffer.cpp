@@ -18,6 +18,10 @@ void Buffer::bind() {
     glBindBuffer(this->bufferType, this->bufferId);
 }
 
+void Buffer::unbind() {
+    glBindBuffer(this->bufferType, 0);
+}
+
 void* Buffer::map(GLenum access = GL_READ_WRITE) {
     if (glMapNamedBuffer) {
         if (access != GL_READ_ONLY) {

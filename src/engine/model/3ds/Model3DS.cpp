@@ -9,8 +9,8 @@
 using namespace Engine;
 
 Model3DS::Model3DS(std::string&& filename) {
-    this->vertexVBO = std::make_shared<Buffer>();
-    this->normalsVBO = std::make_shared<Buffer>();
+    this->vertexVBO = std::make_shared<Buffer>(Buffer());
+    this->normalsVBO = std::make_shared<Buffer>(Buffer());
     this->model = lib3ds_file_load(filename.c_str());
 
     if (!model) {
