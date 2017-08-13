@@ -80,8 +80,8 @@ void Window::create() {
 }
 
 bool Window::loop() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glfwSwapBuffers(this->window);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glfwPollEvents();
     
     return !glfwWindowShouldClose(this->window);

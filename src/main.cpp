@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     Model3DS dragon("resource/dragon.3ds");
    
     float points[] = {
-         0.5f,  0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f,
          0.5f, -0.5f, 0.0f,
         -0.5f, -0.5f, 0.0f
     };
@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
         vao.bind();
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
+
     win->close();
 
     return 0;

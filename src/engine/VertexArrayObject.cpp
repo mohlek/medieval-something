@@ -21,11 +21,11 @@ void VertexArrayObject::addBuffer(std::shared_ptr<Buffer>& buffer) {
     if (glEnableVertexArrayAttrib) {
         glEnableVertexArrayAttrib(this->vaoId, index);
     } else {
-        bind();
         glEnableVertexAttribArray(index);
     }
 
     buffer->bind();
+    bind();
     glVertexAttribPointer(index, 3, buffer->dataType, GL_FALSE, buffer->stride, 0);
     this->buffers.push_back(buffer);
 }

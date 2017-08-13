@@ -8,10 +8,10 @@ using namespace Game::Shader;
 
 MainShader::MainShader() {
     Engine::ShaderLoader loadMainFragment(GL_FRAGMENT_SHADER, "shader/main.frag");
-    Engine::Shader mainFragment(loadMainFragment);
-    this->shaders.push_back(std::make_shared<Engine::Shader>(mainFragment));
+    std::shared_ptr<Engine::Shader> mainFragment = std::make_shared<Engine::Shader>(Engine::Shader(loadMainFragment));
+    this->shaders.push_back(mainFragment);
 
     Engine::ShaderLoader loadMainVertex(GL_VERTEX_SHADER, "shader/main.vert");
-    Engine::Shader mainVertex(loadMainVertex);
-    this->shaders.push_back(std::make_shared<Engine::Shader>(mainVertex));
+    std::shared_ptr<Engine::Shader> mainVertex = std::make_shared<Engine::Shader>(Engine::Shader(loadMainVertex));
+    this->shaders.push_back(mainVertex);
 }
