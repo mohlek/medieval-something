@@ -36,6 +36,8 @@ Window::Window() {
     glfwWindowHint(GLFW_GREEN_BITS, this->mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS, this->mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, this->mode->refreshRate);
+    
+    glfwWindowHint(GLFW_SAMPLES, 8);
 }
 
 void Window::create() {
@@ -75,6 +77,8 @@ void Window::create() {
 
     glEnable(GL_DEPTH_TEST); // enable depth-testing
     glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
+
+    glEnable(GL_MULTISAMPLE);
 
     glfwSetKeyCallback(this->window, keyCallback);
 }
