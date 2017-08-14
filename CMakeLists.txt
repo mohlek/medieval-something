@@ -14,13 +14,17 @@ set(SOURCE
     src/engine/shader/Shader.cpp
     src/engine/shader/ShaderProgram.cpp
     src/engine/model/3ds/Model3DS.cpp
-    src/shader/MainShader.cpp
+    src/game/SkyBox.cpp
+    src/game/shader/MainShader.cpp
+    src/game/shader/SkyBoxShader.cpp
     src/main.cpp
 )
 
 set(SHADERS
-    src/shader/main.frag
-    src/shader/main.vert
+    src/game/shader/main.frag
+    src/game/shader/main.vert
+    src/game/shader/skybox.frag
+    src/game/shader/skybox.vert
 )
 
 set(RESOURCES

@@ -1,8 +1,8 @@
 #include "MainShader.h"
 
 #include <memory>
-#include "../engine/shader/Shader.h"
-#include "../engine/shader/ShaderLoader.h"
+#include "../../engine/shader/Shader.h"
+#include "../../engine/shader/ShaderLoader.h"
 
 using namespace Game::Shader;
 

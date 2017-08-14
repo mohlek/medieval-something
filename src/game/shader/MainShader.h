@@ -1,4 +1,7 @@
-#include "../engine/shader/ShaderProgram.h"
+#ifndef MAINSHADER_H
+#define MAINSHADER_H
+
+#include "../../engine/shader/ShaderProgram.h"
 
 #include <GL/glew.h>
 
@@ -13,3 +16,5 @@ namespace Game {
         };
     }
 }
+
+#endif /* MAINSHADER_H */

@@ -1,3 +1,6 @@
+#ifndef SHADERPROGRAM_H
+#define SHADERPROGRAM_H
+
 #include <GL/glew.h>
 
 #include <string>
@@ -6,6 +9,7 @@
 #include <memory>
 
 #include "Shader.h"
+#include "ShaderLoader.h"
 
 namespace Engine {
     
@@ -27,3 +31,5 @@ namespace Engine {
             void end();
     };
 }
+
+#endif /* SHADERPROGRAM_H */

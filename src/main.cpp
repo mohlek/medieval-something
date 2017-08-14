@@ -10,7 +10,8 @@
 #include "engine/model/3ds/Model3DS.h"
 #include "engine/VertexArrayObject.h"
 
-#include "shader/MainShader.h"
+#include "game/shader/MainShader.h"
+#include "game/SkyBox.h"
 
 using namespace Engine;
 
@@ -23,6 +24,8 @@ int main(int argc, char** argv) {
     Game::Shader::MainShader mainShader;
     
     mainShader.link();
+
+    Game::SkyBox skybox;
 
     Model3DS dragon("resource/dragon.3ds");
    
@@ -41,6 +44,8 @@ int main(int argc, char** argv) {
     vao.addBuffer(vbo);
 
     while (win->loop()) {
+        skybox.render();
+
         mainShader.use();
 
         vao.bind();
