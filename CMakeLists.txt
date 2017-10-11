@@ -14,6 +14,7 @@ set(SOURCE
     src/engine/shader/Shader.cpp
     src/engine/shader/ShaderProgram.cpp
     src/engine/model/3ds/Model3DS.cpp
+    src/engine/Texture.cpp
     src/game/SkyBox.cpp
     src/game/shader/MainShader.cpp
     src/game/shader/SkyBoxShader.cpp
@@ -78,6 +79,17 @@ endif(NOT LIB3DS_FOUND)
 
 
 ########################################################
+# FIND SOIL
+########################################################
+find_package(SOIL)
+include_directories(${SOIL_INCLUDE_DIRS})
+link_directories(${SOIL_LIBRARY_DIRS})
+if(NOT SOIL_FOUND)
+    message(ERROR " SOIL not found!")
+endif(NOT SOIL_FOUND)
+
+
+########################################################
 # COPY SHADER
 ########################################################
 
@@ -91,4 +103,4 @@ file(COPY ${RESOURCES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/resource/)
 
 add_executable(medievalSomething ${SOURCE})
 
-target_link_libraries(medievalSomething ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${LIB3DS_LIBRARY})
+target_link_libraries(medievalSomething ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${GLFW_LIBRARIES} ${LIB3DS_LIBRARY} ${SOIL_LIBRARY})

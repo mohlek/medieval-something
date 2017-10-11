@@ -3,6 +3,11 @@
 
 #include <GL/glew.h>
 
+#include <string>
+#include <memory>
+
+#include "Buffer.h"
+
 namespace Engine {
 
     class Texture {
@@ -10,9 +15,13 @@ namespace Engine {
             GLuint textureId;
             GLenum type;
             const GLsizei size = 1;
+
         public:
             Texture(GLenum type);
             ~Texture();
+
+            void loadFromBuffer(GLvoid* data);
+            void loadFromFile(std::string&& filename);
     };
 }
 
