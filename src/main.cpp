@@ -102,9 +102,9 @@ int main(int argc, char** argv) {
 
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)win->getWidth() / (float)win->getHeight(), 0.1f, 100.0f);
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.003f, 0.003f, 0.003f));
+    model = glm::scale(model, glm::vec3(0.3f));
     glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -100.0f));
 
     GLint uniformModel = program.getUniformLocation("model");
     GLint uniformView = program.getUniformLocation("view");
