@@ -13,10 +13,19 @@
 #include <engine/shader/ShaderLoader.h>
 #include <engine/shader/ShaderProgram.h>
 #include <engine/Texture.h>
+#include <engine/Terrain.h>
+#include <engine/Camera.h>
 
-#include "shader.h"
+#include <engine/PerlinNoise.hpp>
+
+#include "../include/shader.h"
 
 #include <GL/gl.h>
+
+#include <engine/object/Object.h>
+
+#include <cmath>
+#include <cfenv>
 
 struct Clock
 {
@@ -32,13 +41,17 @@ struct Clock
 };
 
 int main(int argc, char** argv) {
+feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     Engine::Window* win = new Engine::Window("Medieval something", 800, 600);
 
     if (!win->create()) {
         return 1;
     }
 
-    std::ifstream in("Medieval_House.obj", std::ios::in);
+    Engine::Camera camera;
+
+
+    std::ifstream in("Medieval_House2.obj", std::ios::in);
     if (!in) {
         fprintf(stderr, "Could not open file");
         exit(1);
@@ -112,7 +125,7 @@ int main(int argc, char** argv) {
 
     Engine::Buffer<glm::vec2> tangent(faceIndex.size());
     Engine::Buffer<glm::vec2> bitangent(faceIndex.size());
-    for (int i = 0; i < faceIndex.size(); i+=3) {
+    for (int i = 0; i < faceIndex.size()-2; i+=3) {
         glm::vec3 pos1 = verticies[faceIndex[i]];
         glm::vec3 pos2 = verticies[faceIndex[i+1]];
         glm::vec3 pos3 = verticies[faceIndex[i+2]];
@@ -152,49 +165,184 @@ int main(int argc, char** argv) {
     vao.setBuffer(0, elements);
     vao.setBuffer(1, norm);
     vao.setBuffer(2, uvs);
+    vao.setBuffer(3, tangent);
+    vao.setBuffer(4, bitangent);
     vao.bind();
 
-    glActiveTexture(GL_TEXTURE0);
-    Engine::Texture textureDiff("Medieval_House_Diff.png");
-    textureDiff.bind();
+    Engine::Texture textureDiffHouse("Medieval_House_Diff.png", GL_TEXTURE0);
+    Engine::Texture textureNormalHouse("Medieval_House_Nor.png", GL_TEXTURE1);
+    textureDiffHouse.bind();
+    textureNormalHouse.bind();
 
-    glActiveTexture(GL_TEXTURE1);
-    Engine::Texture textureNormal("Medieval_House_Nor.png");
-    textureNormal.bind();
+    void* testTexture = malloc(250 * 250 * 4);
+    float* testTexturePtr = (float*)testTexture;
+    siv::PerlinNoise p;
+    for (int y = 0; y < 250; ++y) {
+        for (int x = 0; x < 250; ++x) {
+            *testTexturePtr = p.accumulatedOctaveNoise2D_0_1(x/100.0, y/100.0, 8);
+            testTexturePtr++;
+        }
+    }
+    Engine::Texture testText(GL_TEXTURE0);
+    testText.pushData(GL_R32F, GL_RED, GL_FLOAT, 250, 250, testTexture);
+    testText.bind();
+
+    Engine::Texture grassTexture("grass.jpg", GL_TEXTURE1);
+    grassTexture.bind();
+
 
     Engine::ShaderProgram program;
-    Engine::Shader vertexShader(GL_VERTEX_SHADER, Shaders::mainVert);
-    Engine::Shader fragmentShader(GL_FRAGMENT_SHADER, Shaders::mainFrag);
+    Engine::Shader vertexShader(GL_VERTEX_SHADER, Shader::mainVert);
+    Engine::Shader fragmentShader(GL_FRAGMENT_SHADER, Shader::mainFrag);
     program.shaders.push_back(vertexShader);
     program.shaders.push_back(fragmentShader);
     program.link();
 
     program.use();
-
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)win->getWidth() / (float)win->getHeight(), 0.1f, 1000.0f);
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.1f));
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -100.0f));
-
-    GLint uniformModel = program.getUniformLocation("model");
-    GLint uniformView = program.getUniformLocation("view");
-    GLint uniformProj = program.getUniformLocation("projection");
-
-    glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(uniformProj, 1, GL_FALSE, glm::value_ptr(proj));
     
-    //glUniform1i(program.getUniformLocation("texture1"), 0);
-    //glUniform1i(program.getUniformLocation("normalMap"), 1);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)win->getWidth() / (float)win->getHeight(), 0.1f, 10000.0f);
+    glm::mat4 modelHouse = glm::mat4(1.0f);
+    modelHouse = glm::scale(modelHouse, glm::vec3(0.5));
+    modelHouse = glm::translate(modelHouse, glm::vec3(5000, 800, 8065));
 
+    GLint uniformModelHouse = program.getUniformLocation("model");
+    GLint uniformViewHouse = program.getUniformLocation("view");
+    GLint uniformProjHouse = program.getUniformLocation("projection");
+    GLint uniformTime = program.getUniformLocation("time");
+
+    glUniformMatrix4fv(uniformProjHouse, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(uniformModelHouse, 1, GL_FALSE, glm::value_ptr(modelHouse));
+
+    Engine::ShaderProgram displayNormalShader;
+    Engine::Shader displayNormalVertex(GL_VERTEX_SHADER, Shader::normalDisplayVert);
+    Engine::Shader displayNormalGeometry(GL_GEOMETRY_SHADER, Shader::normalDisplayGeo);
+    Engine::Shader displayNormalFragment(GL_FRAGMENT_SHADER, Shader::normalDisplayFrag);
+    displayNormalShader.shaders.push_back(displayNormalVertex);
+    displayNormalShader.shaders.push_back(displayNormalGeometry);
+    displayNormalShader.shaders.push_back(displayNormalFragment);
+    displayNormalShader.link();
+    displayNormalShader.use();
+
+    GLint uniformModelDisplayNormal = displayNormalShader.getUniformLocation("model");
+    GLint uniformViewDisplayNormal = displayNormalShader.getUniformLocation("view");
+    GLint uniformProjDisplayNormal = displayNormalShader.getUniformLocation("projection");
+    glUniformMatrix4fv(uniformProjDisplayNormal, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(uniformModelDisplayNormal, 1, GL_FALSE, glm::value_ptr(modelHouse));
+
+    Engine::ShaderProgram programTerrain;
+    Engine::Shader vertexShaderTerrain(GL_VERTEX_SHADER, Shader::terrainVertex);
+    Engine::Shader fragmentShaderTerrain(GL_FRAGMENT_SHADER, Shader::terrainFragment);
+    programTerrain.shaders.push_back(vertexShaderTerrain);
+    programTerrain.shaders.push_back(fragmentShaderTerrain);
+    programTerrain.link();
+
+    programTerrain.use();
+
+    glm::mat4 modelTerrain = glm::mat4(1.0f);
+    modelTerrain = glm::scale(modelTerrain, glm::vec3(5000.f));
+    camera.position.x += 200;
+    camera.position.z += 1000;
+    camera.position.y += 200;
+    glm::mat4 viewTerrain = camera.getView();
+
+    GLint uniformModelTerrain = programTerrain.getUniformLocation("model");
+    GLint uniformViewTerrain = programTerrain.getUniformLocation("view");
+    GLint uniformProjTerrain = programTerrain.getUniformLocation("projection");
+
+    glUniformMatrix4fv(uniformProjTerrain, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(uniformModelTerrain, 1, GL_FALSE, glm::value_ptr(modelTerrain));
+    
+    double factor = 0.14;
+    Engine::Terrain terrain(500, 500, projection, programTerrain);
+    terrain.setFactor(factor);
+    
     Clock clock;
 
+    bool KEYS[322];
+    memset(KEYS, 0, 322);
+
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    glClearColor(1.0, 1.0, 1.0, 1.0);
     do {
+        SDL_Event event;
+        while (SDL_PollEvent( & event)) {
+            switch (event.type) {
+                case SDL_QUIT: return 0;
+                case SDL_KEYUP:
+                    if (event.key.keysym.sym <= 322)
+                        KEYS[event.key.keysym.sym] = false; 
+                    break;
+                case SDL_KEYDOWN:
+                    fprintf(stdout, "%d\n", event.key.keysym.sym);
+                    if (event.key.keysym.sym <= 322)
+                        KEYS[event.key.keysym.sym] = true; 
+                    break;
+                default: break;
+            }
+        }
+
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+
+        // fprintf(stdout, "%d %d\n", mouseX, mouseY);
+
+        float cameraSpeed = (float)(clock.delta / 1.0f);
+        if (KEYS[SDLK_w]) {
+            camera.position += camera.direction * cameraSpeed;
+        }
+        if (KEYS[SDLK_s]) {
+            camera.position -= camera.direction * cameraSpeed;
+        }
+        if (KEYS[SDLK_d]) {
+            camera.position += glm::normalize(glm::cross(camera.direction, camera.up)) * cameraSpeed;
+        }
+        if (KEYS[SDLK_a]) {
+            camera.position -= glm::normalize(glm::cross(camera.direction, camera.up)) * cameraSpeed;
+        }
+        if (KEYS[SDLK_SPACE]) {
+            camera.position.y += 1.0f * cameraSpeed;
+        }
+        if (KEYS[SDLK_x]) {
+            camera.position.y -= 1.0f * cameraSpeed;
+        }
+        if (KEYS[SDLK_h]) {
+            factor += 0.005;
+            terrain.setFactor(factor);
+            fprintf(stdout, "factor %f\n", factor);
+        }
+        if (KEYS[SDLK_j]) {
+            factor -= 0.005;
+            terrain.setFactor(factor);
+            fprintf(stdout, "factor %f\n", factor);
+        }
+
         clock.tick();
-        float angle = clock.delta / 5000.0f;
-        model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-        glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+        
+        viewTerrain = camera.getView();
+    
+        programTerrain.use();
+        testText.bind();
+        grassTexture.bind();
+        glUniformMatrix4fv(uniformViewTerrain, 1, GL_FALSE, glm::value_ptr(viewTerrain));
+        terrain.render();
+
+
+        program.use();
+        vao.bind();
+        textureDiffHouse.bind();
+        textureNormalHouse.bind();
+        glUniform1ui(uniformTime, SDL_GetTicks());
+        glUniformMatrix4fv(uniformViewHouse, 1, GL_FALSE, glm::value_ptr(viewTerrain));
         glDrawElements(GL_TRIANGLES, faceIndex.size(), GL_UNSIGNED_INT, 0);
+
+        displayNormalShader.use();
+        vao.bind();
+        textureDiffHouse.bind();
+        textureNormalHouse.bind();
+        glUniformMatrix4fv(uniformViewDisplayNormal, 1, GL_FALSE, glm::value_ptr(viewTerrain));
+        glDrawElements(GL_TRIANGLES, faceIndex.size(), GL_UNSIGNED_INT, 0);
+
     } while (win->loop());
 
     return 0;
