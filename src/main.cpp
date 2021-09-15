@@ -125,20 +125,58 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 
     Engine::Buffer<glm::vec2> tangent(faceIndex.size());
     Engine::Buffer<glm::vec2> bitangent(faceIndex.size());
-    for (int i = 0; i < faceIndex.size()-2; i+=3) {
-        glm::vec3 pos1 = verticies[faceIndex[i]];
-        glm::vec3 pos2 = verticies[faceIndex[i+1]];
-        glm::vec3 pos3 = verticies[faceIndex[i+2]];
-        glm::vec2 uv1 = texture[textureIndex[i]];
-        glm::vec2 uv2 = texture[textureIndex[i+1]];
-        glm::vec2 uv3 = texture[textureIndex[i+2]];
+    for (int i = 0; i < faceIndex.size(); i+=1) {
+        /*
+          example:
+            i    i1 i2 i3
+            0 =>  0  1  2   (i+0, i+1, i+2)
+            1 =>  0  1  2   (i-1, i+0, i+1)
+            2 =>  0  1  2   (i-2, i-1, i+0)
+            3 =>  3  4  5   (i+0, i+1, i+2)
+            4 =>  3  4  5   (i-1, i+0, i+1)
+            5 =>  3  4  5   (i-2, i-1, i+0)
+            ....
+
+          get the coorect index:
+        */
+        const auto ii = std::array{
+          i + 0 - (i % 3), // i1
+          i + 1 - (i % 3), // i2
+          i + 2 - (i % 3)  // i3
+        }
+
+        /*
+          example:
+            i    i1 i2 i3
+            0 =>  0  1  2
+            1 =>  1  2  0
+            2 =>  2  0  1
+            3 =>  3  4  5
+            4 =>  4  5  3
+            5 =>  5  3  4
+            ....
+
+          select the coorect index for iX
+        */
+        const auto i1 = ii[(i+0)%3];
+        const auto i2 = ii[(i+1)%3];
+        const auto i3 = ii[(i+2)%3];
+
+        glm::vec3 pos1 = verticies[faceIndex[i1]];
+        glm::vec3 pos2 = verticies[faceIndex[i2]];
+        glm::vec3 pos3 = verticies[faceIndex[i3]];
+        glm::vec2 uv1 = texture[textureIndex[i1]];
+        glm::vec2 uv2 = texture[textureIndex[i2]];
+        glm::vec2 uv3 = texture[textureIndex[i3]];
 
         glm::vec3 edge1 = pos2 - pos1;
         glm::vec3 edge2 = pos3 - pos1;
         glm::vec2 deltaUV1 = uv2 - uv1;
         glm::vec2 deltaUV2 = uv3 - uv1;
 
-        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+        constexpr auto epsilon = std::numeric_limits<T>::epsilon();
+        float fd = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y)
+        float f = 1.0f / (fd + std::copysign(epsilon, fd); // add epsilon .. fixed division by zero problem..
 
         glm::vec3 t;
         t.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
@@ -150,8 +188,10 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
         b.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
         b.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
 
-        tangent[i] = t;
-        bitangent[i] = b;
+        // todo make sure .. t and b is not lenght == 0 ... 
+
+        tangent[i]   = glm::normalize(t); // normalize t
+        bitangent[i] = glm::normalize(b); // normalze b
     }
     elements.flush();
     vbo.flush();
