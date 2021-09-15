@@ -74,8 +74,7 @@ namespace Shader {
             vec3 color = texture(diffuseMap, fs_in.uv).rgb;
             vec3 ambient = 0.1 * color;
             vec3 lightDir = fs_in.tangentLightDir;
-            float diff = dot(lightDir, normal);
-            diff = sign(diff) * diff;
+            float diff = max(dot(lightDir, normal), 0.0);
             vec3 diffuse = diff * color;
             vec3 viewDir = normalize(fs_in.tangentViewPos - fs_in.tangentFragPos);
             vec3 reflectDir = reflect(-lightDir, normal);
@@ -83,7 +82,7 @@ namespace Shader {
             float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
             vec3 specular = vec3(0.2) * spec;
-            fragColor = vec4(isnan(lightDir.x), isnan(lightDir.y), isnan(lightDir.z), 1.0); // + specular, 1.0);
+            fragColor = vec4(ambient + diffuse + specular, 1.0); // + specular, 1.0);
         }
     )";
     
@@ -186,7 +185,7 @@ namespace Shader {
         out vec4 fragColor;
 
         void main() { 
-            fragColor = texture(groundTexture, texCoord*10);    
+            fragColor = texture(groundTexture, texCoord*500);    
         }
     )";
 }

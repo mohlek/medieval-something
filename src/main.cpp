@@ -41,7 +41,7 @@ struct Clock
 };
 
 int main(int argc, char** argv) {
-feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+    // feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     Engine::Window* win = new Engine::Window("Medieval something", 800, 600);
 
     if (!win->create()) {
@@ -143,7 +143,7 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
           i + 0 - (i % 3), // i1
           i + 1 - (i % 3), // i2
           i + 2 - (i % 3)  // i3
-        }
+        };
 
         /*
           example:
@@ -174,9 +174,9 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
         glm::vec2 deltaUV1 = uv2 - uv1;
         glm::vec2 deltaUV2 = uv3 - uv1;
 
-        constexpr auto epsilon = std::numeric_limits<T>::epsilon();
-        float fd = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y)
-        float f = 1.0f / (fd + std::copysign(epsilon, fd); // add epsilon .. fixed division by zero problem..
+        constexpr auto epsilon = std::numeric_limits<float>::epsilon();
+        float fd = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+        float f = 1.0f / (fd + std::copysign(epsilon, fd)); // add epsilon .. fixed division by zero problem..
 
         glm::vec3 t;
         t.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
@@ -242,8 +242,8 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)win->getWidth() / (float)win->getHeight(), 0.1f, 10000.0f);
     glm::mat4 modelHouse = glm::mat4(1.0f);
-    modelHouse = glm::scale(modelHouse, glm::vec3(0.5));
-    modelHouse = glm::translate(modelHouse, glm::vec3(5000, 800, 8065));
+    modelHouse = glm::scale(modelHouse, glm::vec3(0.01));
+    modelHouse = glm::translate(modelHouse, glm::vec3(50000, 23450, 80065));
 
     GLint uniformModelHouse = program.getUniformLocation("model");
     GLint uniformViewHouse = program.getUniformLocation("view");
@@ -303,6 +303,11 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    //SDL_ShowCursor(false);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    float yaw, pitch;
+    float lastX = 400, lastY = 300;
+
     glClearColor(1.0, 1.0, 1.0, 1.0);
     do {
         SDL_Event event;
@@ -323,11 +328,25 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
         }
 
         int mouseX, mouseY;
-        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-        // fprintf(stdout, "%d %d\n", mouseX, mouseY);
+        const float sensitivity = 0.05f;
+        mouseX *= sensitivity;
+        mouseY *= sensitivity;
 
-        float cameraSpeed = (float)(clock.delta / 1.0f);
+        yaw   += mouseX;
+        pitch += -mouseY;  
+
+        if(pitch > 89.0f)
+          pitch =  89.0f;
+        if(pitch < -89.0f)
+          pitch = -89.0f;
+
+        camera.direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        camera.direction.y = sin(glm::radians(pitch));
+        camera.direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+        float cameraSpeed = (float)(clock.delta / 10.0f);
         if (KEYS[SDLK_w]) {
             camera.position += camera.direction * cameraSpeed;
         }
@@ -356,6 +375,9 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
             terrain.setFactor(factor);
             fprintf(stdout, "factor %f\n", factor);
         }
+        if (KEYS[SDLK_q]) {
+            win->close();
+        }
 
         clock.tick();
         
@@ -367,7 +389,6 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
         glUniformMatrix4fv(uniformViewTerrain, 1, GL_FALSE, glm::value_ptr(viewTerrain));
         terrain.render();
 
-
         program.use();
         vao.bind();
         textureDiffHouse.bind();
@@ -375,14 +396,6 @@ feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
         glUniform1ui(uniformTime, SDL_GetTicks());
         glUniformMatrix4fv(uniformViewHouse, 1, GL_FALSE, glm::value_ptr(viewTerrain));
         glDrawElements(GL_TRIANGLES, faceIndex.size(), GL_UNSIGNED_INT, 0);
-
-        displayNormalShader.use();
-        vao.bind();
-        textureDiffHouse.bind();
-        textureNormalHouse.bind();
-        glUniformMatrix4fv(uniformViewDisplayNormal, 1, GL_FALSE, glm::value_ptr(viewTerrain));
-        glDrawElements(GL_TRIANGLES, faceIndex.size(), GL_UNSIGNED_INT, 0);
-
     } while (win->loop());
 
     return 0;
