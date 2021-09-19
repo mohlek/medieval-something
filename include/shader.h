@@ -41,8 +41,8 @@ namespace Shader {
             mat3 TBN = transpose(mat3(T, B, N));
             vs_out.TBN = TBN;
 
-            vec3 lightDir = normalize(vec3(sin(time * 0.001), -1.0, cos(time * 0.001)));
-            vs_out.tangentLightDir = lightDir;
+            vec3 lightDir = normalize(vec3(sin(time * 0.001), 1.0, cos(time * 0.001)));
+            vs_out.tangentLightDir = TBN * lightDir;
             vs_out.tangentViewPos  = TBN * transpose(view)[3].xyz;
             vs_out.tangentFragPos  = TBN * vs_out.fragPos;
 

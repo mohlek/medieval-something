@@ -123,8 +123,8 @@ int main(int argc, char** argv) {
         uvs[i] = texture[textureIndex[i]];
     }
 
-    Engine::Buffer<glm::vec2> tangent(faceIndex.size());
-    Engine::Buffer<glm::vec2> bitangent(faceIndex.size());
+    Engine::Buffer<glm::vec3> tangent(faceIndex.size());
+    Engine::Buffer<glm::vec3> bitangent(faceIndex.size());
     for (int i = 0; i < faceIndex.size(); i+=1) {
         /*
           example:
