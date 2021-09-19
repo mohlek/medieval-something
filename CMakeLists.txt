@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.21)
 
 PROJECT(MEDIEVAL_SOMETHING)
 
@@ -12,5 +12,5 @@ add_subdirectory(engine/)
 
 add_executable(medievalSomething ${src_medieval})
 
-target_include_directories(medievalSomething INTERFACE "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(medievalSomething engine)
+target_include_directories(medievalSomething PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(medievalSomething engine gl3w)

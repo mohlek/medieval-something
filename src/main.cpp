@@ -20,7 +20,7 @@
 
 #include "../include/shader.h"
 
-#include <GL/gl.h>
+#include <GL/gl3w.h>
 
 #include <engine/object/Object.h>
 
