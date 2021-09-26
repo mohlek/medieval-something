@@ -15,12 +15,17 @@
 #include <engine/Texture.h>
 #include <engine/Terrain.h>
 #include <engine/Camera.h>
+#include <engine/Framebuffer.h>
 
 #include <engine/PerlinNoise.hpp>
 
 #include "../include/shader.h"
 
 #include <GL/gl3w.h>
+
+#include <imgui.h>
+#include <imgui_impl_sdl.h>
+#include <imgui_impl_opengl3.h>
 
 #include <engine/object/Object.h>
 
@@ -48,8 +53,23 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplSDL2_InitForOpenGL(win->getWindow(), win->getContext());
+    ImGui_ImplOpenGL3_Init("#version 420");
+
     Engine::Camera camera;
 
+    struct CameraUBO {
+        glm::mat4 projection;
+        glm::mat4 view;
+    } cameraUbo;
+
+    fprintf(stdout, "%d\n", sizeof(CameraUBO));
+
+    Engine::Buffer<CameraUBO> cameraBuffer(1, GL_UNIFORM_BUFFER);
 
     std::ifstream in("Medieval_House2.obj", std::ios::in);
     if (!in) {
@@ -241,17 +261,20 @@ int main(int argc, char** argv) {
     program.use();
     
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)win->getWidth() / (float)win->getHeight(), 0.1f, 10000.0f);
+    cameraUbo.projection = projection;
+    cameraBuffer[0].projection = projection;
+    
     glm::mat4 modelHouse = glm::mat4(1.0f);
     modelHouse = glm::scale(modelHouse, glm::vec3(0.01));
     modelHouse = glm::translate(modelHouse, glm::vec3(50000, 23450, 80065));
 
     GLint uniformModelHouse = program.getUniformLocation("model");
-    GLint uniformViewHouse = program.getUniformLocation("view");
     GLint uniformProjHouse = program.getUniformLocation("projection");
     GLint uniformTime = program.getUniformLocation("time");
+    GLint uniformCamera = program.getUniformBlockIndex("camera");
 
-    glUniformMatrix4fv(uniformProjHouse, 1, GL_FALSE, glm::value_ptr(projection));
     glUniformMatrix4fv(uniformModelHouse, 1, GL_FALSE, glm::value_ptr(modelHouse));
+    glUniformBlockBinding(program.getProgramId(), uniformCamera, 0);
 
     Engine::ShaderProgram displayNormalShader;
     Engine::Shader displayNormalVertex(GL_VERTEX_SHADER, Shader::normalDisplayVert);
@@ -264,10 +287,9 @@ int main(int argc, char** argv) {
     displayNormalShader.use();
 
     GLint uniformModelDisplayNormal = displayNormalShader.getUniformLocation("model");
-    GLint uniformViewDisplayNormal = displayNormalShader.getUniformLocation("view");
-    GLint uniformProjDisplayNormal = displayNormalShader.getUniformLocation("projection");
-    glUniformMatrix4fv(uniformProjDisplayNormal, 1, GL_FALSE, glm::value_ptr(projection));
+    GLint uniformCameraDisplayNormal = displayNormalShader.getUniformBlockIndex("camera");
     glUniformMatrix4fv(uniformModelDisplayNormal, 1, GL_FALSE, glm::value_ptr(modelHouse));
+    glUniformBlockBinding(displayNormalShader.getProgramId(), uniformCameraDisplayNormal, 0);
 
     Engine::ShaderProgram programTerrain;
     Engine::Shader vertexShaderTerrain(GL_VERTEX_SHADER, Shader::terrainVertex);
@@ -283,18 +305,23 @@ int main(int argc, char** argv) {
     camera.position.x += 200;
     camera.position.z += 1000;
     camera.position.y += 200;
-    glm::mat4 viewTerrain = camera.getView();
 
     GLint uniformModelTerrain = programTerrain.getUniformLocation("model");
-    GLint uniformViewTerrain = programTerrain.getUniformLocation("view");
-    GLint uniformProjTerrain = programTerrain.getUniformLocation("projection");
+    GLint uniformCameraTerrain = programTerrain.getUniformBlockIndex("camera");
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraBuffer._bufferId);
 
-    glUniformMatrix4fv(uniformProjTerrain, 1, GL_FALSE, glm::value_ptr(projection));
     glUniformMatrix4fv(uniformModelTerrain, 1, GL_FALSE, glm::value_ptr(modelTerrain));
+    glUniformBlockBinding(programTerrain.getProgramId(), uniformCameraTerrain, 0);
     
     double factor = 0.14;
     Engine::Terrain terrain(500, 500, projection, programTerrain);
     terrain.setFactor(factor);
+
+    Engine::Texture depthMap;
+    depthMap.pushData(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, 800, 600, NULL);
+    Engine::Framebuffer framebuffer(GL_FRAMEBUFFER);
+    framebuffer.addTexture(GL_DEPTH_ATTACHMENT, depthMap);
+    framebuffer.unbind();
     
     Clock clock;
 
@@ -304,11 +331,12 @@ int main(int argc, char** argv) {
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     //SDL_ShowCursor(false);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_FALSE);
     float yaw, pitch;
     float lastX = 400, lastY = 300;
+    bool moveCamera = false;
+    ImVec4 clearColor(1.0, 1.0, 1.0, 1.0);
 
-    glClearColor(1.0, 1.0, 1.0, 1.0);
     do {
         SDL_Event event;
         while (SDL_PollEvent( & event)) {
@@ -316,7 +344,12 @@ int main(int argc, char** argv) {
                 case SDL_QUIT: return 0;
                 case SDL_KEYUP:
                     if (event.key.keysym.sym <= 322)
-                        KEYS[event.key.keysym.sym] = false; 
+                        KEYS[event.key.keysym.sym] = false;
+                    if (event.key.keysym.sym == SDLK_m) {
+                        moveCamera = !moveCamera;
+                        fprintf(stdout, "moveCamera: %d\n", moveCamera);
+                        SDL_SetRelativeMouseMode(moveCamera ? SDL_TRUE : SDL_FALSE);
+                    }
                     break;
                 case SDL_KEYDOWN:
                     fprintf(stdout, "%d\n", event.key.keysym.sym);
@@ -330,23 +363,25 @@ int main(int argc, char** argv) {
         int mouseX, mouseY;
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-        const float sensitivity = 0.05f;
-        mouseX *= sensitivity;
-        mouseY *= sensitivity;
+        if (moveCamera) {
+            const float sensitivity = 0.05f;
+            mouseX *= sensitivity;
+            mouseY *= sensitivity;
 
-        yaw   += mouseX;
-        pitch += -mouseY;  
+            yaw   += mouseX;
+            pitch += -mouseY;  
 
-        if(pitch > 89.0f)
-          pitch =  89.0f;
-        if(pitch < -89.0f)
-          pitch = -89.0f;
+            if(pitch > 89.0f)
+                pitch =  89.0f;
+            if(pitch < -89.0f)
+                pitch = -89.0f;
 
-        camera.direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        camera.direction.y = sin(glm::radians(pitch));
-        camera.direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+            camera.direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+            camera.direction.y = sin(glm::radians(pitch));
+            camera.direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        }
 
-        float cameraSpeed = (float)(clock.delta / 10.0f);
+        float cameraSpeed = (float)(clock.delta / 50.0f);
         if (KEYS[SDLK_w]) {
             camera.position += camera.direction * cameraSpeed;
         }
@@ -378,15 +413,14 @@ int main(int argc, char** argv) {
         if (KEYS[SDLK_q]) {
             win->close();
         }
-
         clock.tick();
-        
-        viewTerrain = camera.getView();
+
+        cameraBuffer[0].view = camera.getView();
+        cameraBuffer.flush();
     
         programTerrain.use();
         testText.bind();
         grassTexture.bind();
-        glUniformMatrix4fv(uniformViewTerrain, 1, GL_FALSE, glm::value_ptr(viewTerrain));
         terrain.render();
 
         program.use();
@@ -394,8 +428,21 @@ int main(int argc, char** argv) {
         textureDiffHouse.bind();
         textureNormalHouse.bind();
         glUniform1ui(uniformTime, SDL_GetTicks());
-        glUniformMatrix4fv(uniformViewHouse, 1, GL_FALSE, glm::value_ptr(viewTerrain));
         glDrawElements(GL_TRIANGLES, faceIndex.size(), GL_UNSIGNED_INT, 0);
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+        {
+            ImGui::Begin("Hello, world!");
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::ColorEdit4("clearColor", (float*)&clearColor);
+            ImGui::End();
+        }
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
     } while (win->loop());
 
     return 0;
