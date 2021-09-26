@@ -63,8 +63,8 @@ int main(int argc, char** argv) {
     Engine::Camera camera;
 
     struct CameraUBO {
-        glm::mat4 projection;
         glm::mat4 view;
+        glm::mat4 projection;
     } cameraUbo;
 
     fprintf(stdout, "%d\n", sizeof(CameraUBO));
@@ -223,6 +223,7 @@ int main(int argc, char** argv) {
     Engine::VertexArrayObject vao;
     vao.setBuffer(0, vbo);
     vao.setBuffer(0, elements);
+    vao.setBuffer(0, cameraBuffer);
     vao.setBuffer(1, norm);
     vao.setBuffer(2, uvs);
     vao.setBuffer(3, tangent);
@@ -271,10 +272,8 @@ int main(int argc, char** argv) {
     GLint uniformModelHouse = program.getUniformLocation("model");
     GLint uniformProjHouse = program.getUniformLocation("projection");
     GLint uniformTime = program.getUniformLocation("time");
-    GLint uniformCamera = program.getUniformBlockIndex("camera");
 
     glUniformMatrix4fv(uniformModelHouse, 1, GL_FALSE, glm::value_ptr(modelHouse));
-    glUniformBlockBinding(program.getProgramId(), uniformCamera, 0);
 
     Engine::ShaderProgram displayNormalShader;
     Engine::Shader displayNormalVertex(GL_VERTEX_SHADER, Shader::normalDisplayVert);
@@ -287,9 +286,7 @@ int main(int argc, char** argv) {
     displayNormalShader.use();
 
     GLint uniformModelDisplayNormal = displayNormalShader.getUniformLocation("model");
-    GLint uniformCameraDisplayNormal = displayNormalShader.getUniformBlockIndex("camera");
     glUniformMatrix4fv(uniformModelDisplayNormal, 1, GL_FALSE, glm::value_ptr(modelHouse));
-    glUniformBlockBinding(displayNormalShader.getProgramId(), uniformCameraDisplayNormal, 0);
 
     Engine::ShaderProgram programTerrain;
     Engine::Shader vertexShaderTerrain(GL_VERTEX_SHADER, Shader::terrainVertex);
@@ -307,11 +304,8 @@ int main(int argc, char** argv) {
     camera.position.y += 200;
 
     GLint uniformModelTerrain = programTerrain.getUniformLocation("model");
-    GLint uniformCameraTerrain = programTerrain.getUniformBlockIndex("camera");
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraBuffer._bufferId);
 
     glUniformMatrix4fv(uniformModelTerrain, 1, GL_FALSE, glm::value_ptr(modelTerrain));
-    glUniformBlockBinding(programTerrain.getProgramId(), uniformCameraTerrain, 0);
     
     double factor = 0.14;
     Engine::Terrain terrain(500, 500, projection, programTerrain);
@@ -335,7 +329,7 @@ int main(int argc, char** argv) {
     float yaw, pitch;
     float lastX = 400, lastY = 300;
     bool moveCamera = false;
-    ImVec4 clearColor(1.0, 1.0, 1.0, 1.0);
+    ImVec4 clearColor(0.0, 0.7, 1.0, 1.0);
 
     do {
         SDL_Event event;

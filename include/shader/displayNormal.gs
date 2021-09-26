@@ -9,7 +9,7 @@ R"(
         
         const float MAGNITUDE = 3.0;
           
-        layout(std140) uniform camera {
+        layout(std140, binding = 0) uniform camera {
             mat4 view;
             mat4 projection;
         };

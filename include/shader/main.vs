@@ -8,7 +8,7 @@ R"(
         layout(location = 4) in vec3 in_bitangent;
 
         uniform mat4 model;
-        layout(std140) uniform camera {
+        layout(std140, binding = 0) uniform camera {
             mat4 view;
             mat4 projection;
         };
@@ -37,7 +37,7 @@ R"(
             mat3 TBN = transpose(mat3(T, B, N));
             vs_out.TBN = TBN;
 
-            vec3 lightDir = normalize(vec3(sin(time * 0.001), 1.0, cos(time * 0.001)));
+            vec3 lightDir = normalize(vec3(sin(float(time) * 0.001), 1.0, cos(float(time) * 0.001)));
             vs_out.tangentLightDir = TBN * lightDir;
             vs_out.tangentViewPos  = TBN * transpose(view)[3].xyz;
             vs_out.tangentFragPos  = TBN * vs_out.fragPos;
